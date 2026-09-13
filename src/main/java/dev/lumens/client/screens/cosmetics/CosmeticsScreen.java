@@ -280,14 +280,16 @@ public class CosmeticsScreen extends Screen implements IClient {
             float maxDim = Math.max(0.05F, Math.max(b[3] - b[0], Math.max(b[4] - b[1], b[5] - b[2])));
             float k = Math.min(w, h) * 0.70F / maxDim;
             float cx = x + w / 2.0F - ((b[0] + b[3]) / 2.0F) * k;
-            float bottom = y + h - 6.0F - b[1] * k;
             MatrixStack matrices = ctx.getMatrices();
             matrices.push();
-            matrices.translate(cx, bottom, 60.0F);
-            matrices.scale(k, k, k);
+            // в GUI ось Y матриц смотрит вниз экрана — отражаем, иначе модель вверх ногами
+            // (низ модели b[1] кладем к низу карточки) и меняем знак питча, чтобы было видно верх
+            float ty = y + h - 6.0F + b[1] * k;
+            matrices.translate(cx, ty, 60.0F);
+            matrices.scale(k, -k, k);
             float yaw = (System.currentTimeMillis() / 40.0F) % 360.0F;
             com.mojang.blaze3d.systems.RenderSystem.enableDepthTest();
-            CosmeticRenderer.render(matrices, c.getTextureId(), c.getModel(), 1.0F, yaw, -12.0F);
+            CosmeticRenderer.render(matrices, c.getTextureId(), c.getModel(), 1.0F, yaw, 12.0F);
             matrices.pop();
         } catch (Exception ignored) {
         }

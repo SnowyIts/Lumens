@@ -43,6 +43,12 @@ public final class CosmeticModel {
     private final List<Element> elements;
     /** Сдвиг якоря в блоках (из "anchor_offset" в пикселях модели): +Y — вверх. */
     private final float[] anchorOffset = new float[3];
+    /** Масштаб модели относительно якоря (из "scale", по умолчанию 1). */
+    private float visualScale = 1.0F;
+
+    public float getVisualScale() {
+        return visualScale;
+    }
 
     private CosmeticModel(int textureWidth, int textureHeight, List<Element> elements) {
         this.textureWidth = textureWidth;
@@ -125,7 +131,15 @@ public final class CosmeticModel {
         } catch (Exception ignored) {
         }
         CosmeticModel model = new CosmeticModel(texW, texH, elements);
-        model.centerXZ();
+        // Автоцентровка по X/Z на 8 (модели, построенные от 0). Отключается
+        // полем "center_xz": false — если автор заложил крепление в координаты
+        // (например крылья: плоскость крепления z=7 должна остаться на месте).
+        boolean center = true;
+        try {
+            if (root.has("center_xz")) center = root.get("center_xz").getAsBoolean();
+        } catch (Exception ignored) {
+        }
+        if (center) model.centerXZ();
         // Необязательный сдвиг якоря: "anchor_offset": [x, y, z] в пикселях модели.
         // Например шлем, обхватывающий голову: [0, -8, 0] (опустить на высоту головы).
         try {
@@ -134,6 +148,14 @@ public final class CosmeticModel {
                 for (int i = 0; i < 3 && i < arr.size(); i++) {
                     model.anchorOffset[i] = arr.get(i).getAsFloat() / 16.0F;
                 }
+            }
+        } catch (Exception ignored) {
+        }
+        // Необязательный масштаб: "scale": 1.1 (растянет модель от якоря).
+        try {
+            if (root.has("scale")) {
+                float s = root.get("scale").getAsFloat();
+                if (s > 0.01F && s < 10.0F) model.visualScale = s;
             }
         } catch (Exception ignored) {
         }
