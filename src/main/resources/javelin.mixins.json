@@ -43,6 +43,8 @@
     "client.render.gui.screen.HandledScreenMixin",
     "minecraft.network.ClientPlayNetworkHandlerMixin",
     "minecraft.render.ClientWorldPropertiesMixin",
+    "minecraft.render.LivingEntityRendererFeatureMixin",
+    "minecraft.render.PlayerEntityRenderStateMixin",
     "minecraft.render.FeatureRendererMixin",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.PlayerEntityRendererMixin"

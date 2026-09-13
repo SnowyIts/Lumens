@@ -4,17 +4,13 @@ import com.darkmagician6.eventapi.EventTarget;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.CatEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import dev.lumens.base.events.impl.other.EventTick;
-import dev.lumens.base.events.impl.render.EventRender3D;
 import dev.lumens.client.cosmetics.Cosmetic;
-import dev.lumens.client.cosmetics.CosmeticRenderer;
 import dev.lumens.client.cosmetics.CosmeticsIO;
 import dev.lumens.client.modules.api.Category;
 import dev.lumens.client.modules.api.Module;
@@ -295,46 +291,7 @@ public final class Cosmetics extends Module {
         }
     }
 
-    // ---------------- аксессуары в мире (только на себе) ----------------
-
-    @EventTarget
-    public void onRender3D(EventRender3D e) {
-        if (mc.player == null || mc.world == null) return;
-        try {
-            if (mc.options.getPerspective().isFirstPerson()) return;
-        } catch (Exception ignored) {
-        }
-        float tickDelta = e.getPartialTicks();
-        Vec3d cam = mc.gameRenderer.getCamera().getPos();
-        Cosmetic head = headCosmetic();
-        if (head != null) {
-            double x = MathHelper.lerp(tickDelta, mc.player.lastRenderX, mc.player.getX());
-            double y = MathHelper.lerp(tickDelta, mc.player.lastRenderY, mc.player.getY());
-            double z = MathHelper.lerp(tickDelta, mc.player.lastRenderZ, mc.player.getZ());
-            double h = mc.player.getBoundingBox().maxY - mc.player.getBoundingBox().minY;
-            float yaw = -MathHelper.lerpAngleDegrees(tickDelta, mc.player.prevHeadYaw, mc.player.headYaw);
-            float pitch = mc.player.getPitch();
-            MatrixStack matrices = e.getMatrix();
-            matrices.push();
-            matrices.translate(x - cam.x, y + h - cam.y, z - cam.z);
-            CosmeticRenderer.render(matrices, head.getTextureId(), head.getModel(), 1.0F, yaw, pitch);
-            matrices.pop();
-        }
-        Cosmetic back = backCosmetic();
-        if (back != null) {
-            double x = MathHelper.lerp(tickDelta, mc.player.lastRenderX, mc.player.getX());
-            double y = MathHelper.lerp(tickDelta, mc.player.lastRenderY, mc.player.getY());
-            double z = MathHelper.lerp(tickDelta, mc.player.lastRenderZ, mc.player.getZ());
-            float yaw = MathHelper.lerpAngleDegrees(tickDelta, mc.player.prevBodyYaw, mc.player.bodyYaw);
-            double rad = Math.toRadians(yaw);
-            double bx = x + Math.sin(rad) * 0.32D;
-            double bz = z - Math.cos(rad) * 0.32D;
-            double by = y + 1.15D;
-            MatrixStack matrices = e.getMatrix();
-            matrices.push();
-            matrices.translate(bx - cam.x, by - cam.y, bz - cam.z);
-            CosmeticRenderer.render(matrices, back.getTextureId(), back.getModel(), 1.0F, 180.0F - yaw, 0.0F);
-            matrices.pop();
-        }
-    }
+    // ---------------- аксессуары в мире ----------------
+    // Рендерятся через CosmeticFeatureRenderer прямо на костях модели
+    // (HEAD — ModelPart head, BACK — ModelPart body), отдельный хук тут не нужен.
 }

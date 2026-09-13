@@ -41,11 +41,25 @@ public final class CosmeticModel {
     private final int textureWidth;
     private final int textureHeight;
     private final List<Element> elements;
+    /** Сдвиг якоря в блоках (из "anchor_offset" в пикселях модели): +Y — вверх. */
+    private final float[] anchorOffset = new float[3];
 
     private CosmeticModel(int textureWidth, int textureHeight, List<Element> elements) {
         this.textureWidth = textureWidth;
         this.textureHeight = textureHeight;
         this.elements = elements;
+    }
+
+    public float getAnchorOffsetX() {
+        return anchorOffset[0];
+    }
+
+    public float getAnchorOffsetY() {
+        return anchorOffset[1];
+    }
+
+    public float getAnchorOffsetZ() {
+        return anchorOffset[2];
     }
 
     public int getTextureWidth() {
@@ -110,7 +124,49 @@ public final class CosmeticModel {
             }
         } catch (Exception ignored) {
         }
-        return new CosmeticModel(texW, texH, elements);
+        CosmeticModel model = new CosmeticModel(texW, texH, elements);
+        model.centerXZ();
+        // Необязательный сдвиг якоря: "anchor_offset": [x, y, z] в пикселях модели.
+        // Например шлем, обхватывающий голову: [0, -8, 0] (опустить на высоту головы).
+        try {
+            if (root.has("anchor_offset") && root.get("anchor_offset").isJsonArray()) {
+                JsonArray arr = root.getAsJsonArray("anchor_offset");
+                for (int i = 0; i < 3 && i < arr.size(); i++) {
+                    model.anchorOffset[i] = arr.get(i).getAsFloat() / 16.0F;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return model;
+    }
+
+    /**
+     * Центрирует модель по X/Z на 8 (центр головы).
+     * Модели из Blockbench часто строят от 0, а рендер считает центром 8 —
+     * без этого аксессуар сидит со сдвигом вбок. Y не трогаем (y=0 — основание).
+     * Сдвигаем и точки вращения, чтобы изгибы (например кончик шапки) не сломались.
+     */
+    private void centerXZ() {
+        if (elements.isEmpty()) return;
+        float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE;
+        float minZ = Float.MAX_VALUE, maxZ = -Float.MAX_VALUE;
+        for (Element e : elements) {
+            minX = Math.min(minX, Math.min(e.from[0], e.to[0]));
+            maxX = Math.max(maxX, Math.max(e.from[0], e.to[0]));
+            minZ = Math.min(minZ, Math.min(e.from[2], e.to[2]));
+            maxZ = Math.max(maxZ, Math.max(e.from[2], e.to[2]));
+        }
+        float dx = 8.0F - (minX + maxX) * 0.5F;
+        float dz = 8.0F - (minZ + maxZ) * 0.5F;
+        if (Math.abs(dx) < 0.001F && Math.abs(dz) < 0.001F) return;
+        for (Element e : elements) {
+            e.from[0] += dx;
+            e.to[0] += dx;
+            e.from[2] += dz;
+            e.to[2] += dz;
+            e.rotOrigin[0] += dx;
+            e.rotOrigin[2] += dz;
+        }
     }
 
     private static void readVec(JsonObject o, String key, float[] out) {

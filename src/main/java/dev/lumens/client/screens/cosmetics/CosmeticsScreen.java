@@ -359,18 +359,8 @@ public class CosmeticsScreen extends Screen implements IClient {
                     vcp, 15728880);
             vcp.draw();
             mc.getEntityRenderDispatcher().setRenderShadows(true);
-            // выбранный аксессуар на модели
-            Cosmetic.Slot slot = section == Section.HEAD ? Cosmetic.Slot.HEAD : Cosmetic.Slot.BACK;
-            Cosmetic sel = slot == Cosmetic.Slot.HEAD ? Cosmetics.INSTANCE.headCosmetic() : Cosmetics.INSTANCE.backCosmetic();
-            if (sel != null) {
-                if (slot == Cosmetic.Slot.HEAD) {
-                    matrices.translate(0.0F, boxH, 0.0F);
-                    CosmeticRenderer.render(matrices, sel.getTextureId(), sel.getModel(), 1.0F, 0.0F, dragPitch);
-                } else {
-                    matrices.translate(0.0F, 1.15F, -0.32F);
-                    CosmeticRenderer.render(matrices, sel.getTextureId(), sel.getModel(), 1.0F, 180.0F, 0.0F);
-                }
-            }
+            // выбранный аксессуар дорисовывает CosmeticFeatureRenderer
+            // прямо на кости модели — дублировать вручную не нужно
             matrices.pop();
             mc.player.setYaw(oYaw);
             mc.player.bodyYaw = oBody;

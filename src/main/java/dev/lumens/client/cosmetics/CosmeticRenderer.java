@@ -58,7 +58,9 @@ public final class CosmeticRenderer {
                     float shade = shadeOf(fe.getKey());
                     int r = (int) (255 * shade), g = (int) (255 * shade), b = (int) (255 * shade);
                     float[][] corners = cornersOf(fe.getKey(), x0, y0, z0, x1, y1, z1);
-                    float[][] uvs = {{u1, v1}, {u2, v1}, {u2, v2}, {u1, v2}};
+                    // как в ванильном ModelElementTexture.getU/getV (rotation=0):
+                    // вершина 0 — (u1, v1), дальше вниз по грани
+                    float[][] uvs = {{u1, v1}, {u1, v2}, {u2, v2}, {u2, v1}};
                     for (int i = 0; i < 4; i++) {
                         float[] c = corners[i];
                         if (hasRot) c = rotate(c, o, e.rotAxis, e.rotAngle);
@@ -87,22 +89,26 @@ public final class CosmeticRenderer {
         }
     }
 
+    /**
+     * Порядок вершин 1:1 как в ванильном CubeFace (проверено по BakedQuadFactory 1.21.4):
+     * вершина 0 всегда несёт (u1, v1) — верхний-левый угол грани при виде снаружи.
+     */
     private static float[][] cornersOf(String dir, float x0, float y0, float z0, float x1, float y1, float z1) {
         switch (dir) {
             case "down":
-                return new float[][]{{x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}, {x0, y0, z1}};
+                return new float[][]{{x0, y0, z1}, {x0, y0, z0}, {x1, y0, z0}, {x1, y0, z1}};
             case "up":
                 return new float[][]{{x0, y1, z0}, {x0, y1, z1}, {x1, y1, z1}, {x1, y1, z0}};
             case "north":
-                return new float[][]{{x1, y0, z0}, {x0, y0, z0}, {x0, y1, z0}, {x1, y1, z0}};
+                return new float[][]{{x1, y1, z0}, {x1, y0, z0}, {x0, y0, z0}, {x0, y1, z0}};
             case "south":
-                return new float[][]{{x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}, {x0, y1, z1}};
+                return new float[][]{{x0, y1, z1}, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}};
             case "west":
-                return new float[][]{{x0, y0, z0}, {x0, y0, z1}, {x0, y1, z1}, {x0, y1, z0}};
+                return new float[][]{{x0, y1, z0}, {x0, y0, z0}, {x0, y0, z1}, {x0, y1, z1}};
             case "east":
-                return new float[][]{{x1, y0, z1}, {x1, y0, z0}, {x1, y1, z0}, {x1, y1, z1}};
+                return new float[][]{{x1, y1, z1}, {x1, y0, z1}, {x1, y0, z0}, {x1, y1, z0}};
             default:
-                return new float[][]{{x0, y0, z0}, {x1, y0, z0}, {x1, y1, z0}, {x0, y1, z0}};
+                return new float[][]{{x0, y1, z1}, {x0, y0, z1}, {x1, y0, z1}, {x1, y1, z1}};
         }
     }
 
